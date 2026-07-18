@@ -13,8 +13,10 @@ font = pygame.font.SysFont(None, 40)
 # Player
 player = pygame.Rect(100, 250, 40, 40)
 velocity = 0
-gravity = 0.045
-boost = -1
+gravity = 0.04
+lift = 0.12
+sink = 0.1
+max_speed = 4
 
 # Game state
 score = 0
@@ -45,12 +47,21 @@ while running:
             if not game_active:
                 game_active = True
                 reset_game()
-            elif event.key == pygame.K_SPACE:
-                velocity = boost
 
     if game_active:
-        # Player physics
+        keys = pygame.key.get_pressed()
+
+        # Balloon physics: gravity always pulls down,
+        # up arrow adds lift, down arrow adds extra sink
         velocity += gravity
+        if keys[pygame.K_UP]:
+            velocity -= lift
+        if keys[pygame.K_DOWN]:
+            velocity += sink
+
+        # Clamp to max speed so it stays controllable
+        velocity = max(-max_speed, min(max_speed, velocity))
+
         player.y += velocity
 
         if player.top < 0 or player.bottom > HEIGHT:
@@ -65,8 +76,9 @@ while running:
         draw_text(f"Score: {score}", 10, 10)
 
     else:
-        draw_text("Press SPACE to Start", 250, 250)
-        draw_text(f"Score: {score}", 330, 300)
+        draw_text("Use UP/DOWN arrows to fly", 200, 230)
+        draw_text("Press any key to Start", 210, 270)
+        draw_text(f"Score: {score}", 330, 310)
 
     pygame.display.flip()
     clock.tick(60)
