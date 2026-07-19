@@ -1,13 +1,16 @@
+import random
 import pygame
 
 pygame.init()
 
 # Screen
 WIDTH, HEIGHT = 800, 600
+SPEED = 5
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("Balloon Flight")
 
 bg = pygame.transform.scale(pygame.image.load("assets/bg.png"), (800, 600))
+
 
 clock = pygame.time.Clock()
 font = pygame.font.SysFont(None, 40)
@@ -47,7 +50,7 @@ class Player(pygame.sprite.Sprite):
 
         self.rect.y += velocity
 
-        if self.rect.top < 0 or self.rect.bottom > HEIGHT:
+        if self.rect.bottom > HEIGHT:
             game_active = False
 
 
@@ -56,17 +59,73 @@ class House(pygame.sprite.Sprite):
         super().__init__()
 
         self.image = pygame.image.load("assets/house.png")
-        self.image = pygame.transform.scale(self.image, (29.4, 23.8))
+        self.image = pygame.transform.scale(self.image, (294 // 2 + 50, 238 // 2 + 50))
         self.x = x
-        self.gap = 200
+        self.y = HEIGHT // 2 + 65
         self.rect = self.image.get_rect()
 
     def update(self):
-        self.x -= 2
+        self.x -= SPEED
+        self.rect.x = self.x
+
+        if self.x < -500:
+            self.x = WIDTH
+
+
+class Tree(pygame.sprite.Sprite):
+    def __init__(self, x):
+        super().__init__()
+
+        self.image = pygame.image.load("assets/tree.png")
+        self.image = pygame.transform.scale(self.image, (294 // 2 + 50, 238 // 2 + 50))
+        self.x = x
+        self.y = HEIGHT // 2 + 65
+        self.rect = self.image.get_rect()
+
+    def update(self):
+        self.x -= SPEED
+        self.rect.x = self.x
+
+        if self.x < -200:
+            self.x = WIDTH
+
+
+class Ground(pygame.sprite.Sprite):
+    def __init__(self, x):
+        super().__init__()
+
+        self.image = pygame.transform.scale(
+            pygame.image.load("assets/ground.png"), (WIDTH, HEIGHT // 7)
+        )
+        self.x = x
+        self.y = 515
+        self.rect = self.image.get_rect()
+
+    def update(self):
+        self.x -= SPEED
         self.rect.x = self.x
 
         if self.x < -80:
             self.x = WIDTH
+
+
+class Bird(pygame.sprite.Sprite):
+    def __init__(self, x):
+        super().__init__()
+
+        self.image = pygame.image.load("assets/bird.png")
+        self.image = pygame.transform.scale(self.image, (133 // 2, 73 // 2))
+        self.x = x
+        self.y = random.randint(0, 400)
+        self.rect = self.image.get_rect()
+
+    def update(self):
+        self.x -= SPEED + 3
+        self.rect.x = self.x
+
+        if self.x < -500:
+            self.x = WIDTH
+            self.y = random.randint(0, 400)
 
 
 player = Player()
@@ -74,7 +133,10 @@ player = Player()
 all_sprites = pygame.sprite.Group()
 all_sprites.add(player)
 
-houses = [House(x) for x in range(WIDTH, WIDTH + 1000, 300)]
+houses = [House(x) for x in range(WIDTH, WIDTH + 1000, 3799)]
+trees = [Tree(x) for x in range(WIDTH, WIDTH + 1000, 564)]
+grounds = [Ground(x) for x in range(WIDTH, WIDTH + 1000, 50)]
+birds = [Bird(x) for x in range(WIDTH, WIDTH + 1000, 3799)]
 
 # Game state
 score = 0
@@ -89,6 +151,9 @@ def draw_text(text, x, y):
 running = True
 while running:
     screen.blit(bg, (0, 0))
+    for ground in grounds:
+        ground.update()
+        screen.blit(ground.image, (ground.x, ground.y))
 
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -103,9 +168,13 @@ while running:
 
     for house in houses:
         house.update()
-        screen.blit(
-            house,
-        )
+        screen.blit(house.image, (house.x, house.y))
+    for tree in trees:
+        tree.update()
+        screen.blit(tree.image, (tree.x, tree.y))
+    for bird in birds:
+        bird.update()
+        screen.blit(bird.image, (bird.x, bird.y))
 
     if game_active:
         keys = pygame.key.get_pressed()
